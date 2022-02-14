@@ -1,0 +1,26 @@
+circom circruit.circom --r --wasm --sym -v
+snarkjs rp  circruit.r1cs circruit.sym
+snarkjs powersoftau new bn128 12 pot12_0000.ptau -v
+snarkjs powersoftau contribute pot12_0000.ptau pot12_0001.ptau -v
+snarkjs powersoftau contribute pot12_0001.ptau pot12_0002.ptau -v
+snarkjs powersoftau export challenge pot12_0002.ptau challenge_0003
+snarkjs powersoftau challenge contribute bn128 challenge_0003 response_0003
+snarkjs powersoftau import response pot12_0002.ptau response_0003 pot12_0003.ptau
+snarkjs powersoftau verify pot12_0003.ptau
+snarkjs powersoftau beacon pot12_0003.ptau pot12_beacon.ptau bb3134d381a4ff2588235759dc38283cf48d6e3c93114eba54c1af1cad73e7c5 10 
+Snarkjs powersoftau prepare phase2 pot12_beacon.ptau pot12_final.ptau -v
+snarkjs powersoftau verify pot12_final.ptau
+snarkjs zkey new circruit.r1cs pot12_final.ptau circruit_0000.zkey
+snarkjs zkey contribute circruit_0000.zkey circruit_0001.zkey 
+snarkjs zkey contribute circruit_0001.zkey circruit_0002.zkey 
+snarkjs zkey export bellman circruit_0002.zkey challenge_phase2_0003
+snarkjs zkey bellman contribute bn128 challenge_phase2_0003 response_phase2_0003
+snarkjs zkey import bellman circruit_0002.zkey response_phase2_0003 circruit_0003.zkey 
+snarkjs zkey verify pot12_final.ptau circruit_0003.zkey
+snarkjs zkey beacon circruit_0003.zkey circruit_final.zkey bb3134d381a4ff2588235759dc38283cf48d6e3c93114eba54c1af1cad73e7c5 10
+Snarkjs zkey export verificationkey circruit_final.zkey verification_key.json
+
+snarkjs wtns calculate circruit.wasm input.json witness.wtns
+snarkjs wtns debug circruit.wasm input.json witness.wtns circruit.sym --trigger -set -get
+snarkjs groth16 prove circruit_final.zkey witness.wtns proof.json public.json
+snarkjs groth16 verify verification_key.json public.json proof.json 
